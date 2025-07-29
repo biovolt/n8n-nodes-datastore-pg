@@ -129,7 +129,7 @@ export const datastoreNodeFields: INodeProperties[] = [
 		name: 'pgSsl',
 		type: 'boolean',
 		default: false,
-		description: 'Use SSL connection to PostgreSQL',
+		description: 'Whether to use SSL connection to PostgreSQL',
 		displayOptions: {
 			show: {
 				storageBackend: ['postgresql'],

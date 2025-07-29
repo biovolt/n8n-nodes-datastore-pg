@@ -5,12 +5,12 @@ import type {
 	INodeTypeDescription,
 } from 'n8n-workflow';
 import { NodeConnectionType, NodeOperationError } from 'n8n-workflow';
-import { datastoreNodeFields } from "./Datastore.description";
+import { datastoreNodeFields } from "./DatastorePg.description";
 import { StorageFactory, StorageBackend } from './storage/StorageFactory';
 import { PostgreSQLConfig } from './storage/PostgreSQLStorage';
 import { IDataStorage } from './storage/IDataStorage';
 
-export class Datastore implements INodeType {
+export class DatastorePg implements INodeType {
 	description: INodeTypeDescription = {
 		displayName: 'Datastore PG',
 		name: 'datastorePg',
@@ -29,18 +29,18 @@ export class Datastore implements INodeType {
 		],
 	};
 
-	private getStorage(this: IExecuteFunctions, itemIndex: number = 0): IDataStorage {
-		const storageBackend = this.getNodeParameter('storageBackend', itemIndex, 'memory') as StorageBackend;
+	private static getStorage(executeFunctions: IExecuteFunctions, itemIndex: number = 0): IDataStorage {
+		const storageBackend = executeFunctions.getNodeParameter('storageBackend', itemIndex, 'memory') as StorageBackend;
 		
 		if (storageBackend === 'postgresql') {
 			const config: PostgreSQLConfig = {
-				host: this.getNodeParameter('pgHost', itemIndex) as string,
-				port: this.getNodeParameter('pgPort', itemIndex) as number,
-				database: this.getNodeParameter('pgDatabase', itemIndex) as string,
-				user: this.getNodeParameter('pgUser', itemIndex) as string,
-				password: this.getNodeParameter('pgPassword', itemIndex) as string,
-				ssl: this.getNodeParameter('pgSsl', itemIndex, false) as boolean,
-				maxConnections: this.getNodeParameter('pgMaxConnections', itemIndex, 10) as number,
+				host: executeFunctions.getNodeParameter('pgHost', itemIndex) as string,
+				port: executeFunctions.getNodeParameter('pgPort', itemIndex) as number,
+				database: executeFunctions.getNodeParameter('pgDatabase', itemIndex) as string,
+				user: executeFunctions.getNodeParameter('pgUser', itemIndex) as string,
+				password: executeFunctions.getNodeParameter('pgPassword', itemIndex) as string,
+				ssl: executeFunctions.getNodeParameter('pgSsl', itemIndex, false) as boolean,
+				maxConnections: executeFunctions.getNodeParameter('pgMaxConnections', itemIndex, 10) as number,
 			};
 			return StorageFactory.createStorage('postgresql', config);
 		}
@@ -53,7 +53,7 @@ export class Datastore implements INodeType {
 		const returnData: INodeExecutionData[] = [];
 		const operation = this.getNodeParameter('operation', 0) as string;
 		const outputForSetClear = this.getNodeParameter('outputForSetClear', 0, 'passThrough') as string;
-		const storage = this.getStorage(0);
+		const storage = DatastorePg.getStorage(this, 0);
 
 		if (operation === 'clearAll') {
 			await storage.clear();
@@ -113,7 +113,7 @@ export class Datastore implements INodeType {
 
 		for (let i = 0; i < items.length; i++) {
 			const keyName = operation !== 'clearAll' ? (this.getNodeParameter('keyName', i, '') as string) : '';
-			const itemStorage = this.getStorage(i);
+			const itemStorage = DatastorePg.getStorage(this, i);
 
 			try {
 				if (operation === 'set') {

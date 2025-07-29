@@ -1,5 +1,5 @@
 import { IDataStorage } from './IDataStorage';
-import { Pool, PoolClient } from 'pg';
+import { Pool } from 'pg';
 
 export interface PostgreSQLConfig {
 	host: string;
@@ -85,7 +85,10 @@ export class PostgreSQLStorage implements IDataStorage {
 			if (result.rows.length === 0) {
 				return undefined;
 			}
-			return JSON.parse(result.rows[0].value);
+			const value = result.rows[0].value;
+			// If value is already an object (JSONB returns objects), return as-is
+			// If it's a string, parse it
+			return typeof value === 'string' ? JSON.parse(value) : value;
 		} finally {
 			client.release();
 		}

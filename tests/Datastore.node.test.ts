@@ -1,4 +1,4 @@
-import { Datastore } from '../nodes/Datastore/Datastore.node';
+import { DatastorePg } from '../nodes/Datastore/DatastorePg.node';
 import { IExecuteFunctions, INodeExecutionData } from 'n8n-workflow';
 
 // Mock the storage factory
@@ -27,7 +27,7 @@ describe('Datastore Node', () => {
 			continueOnFail: jest.fn().mockReturnValue(false),
 		};
 
-		datastore = new Datastore();
+		datastore = new DatastorePg();
 		
 		// Mock the getStorage method
 		(datastore as any).getStorage = jest.fn().mockReturnValue(mockStorage);

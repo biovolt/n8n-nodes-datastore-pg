@@ -1,24 +1,23 @@
 {
   "name": "n8n-nodes-datastore-pg",
-  "version": "0.1.18",
-  "description": "Datastore for n8n with PostgreSQL support - store data in memory or PostgreSQL database",
+  "version": "0.1.24",
+  "description": "Datastore for n8n with PostgreSQL support - store data in memory or PostgreSQL database. This package is in testing and not for production use.",
   "keywords": [
     "n8n-community-node-package"
   ],
   "license": "MIT",
-  "homepage": "",
+  "homepage": "https://github.com/biovolt/n8n-nodes-datastore-pg#readme",
   "author": {
-    "name": "Dmitrii Korotovskii",
-    "email": "dmitry@korotovsky.io"
+    "name": "biovolt",
+    "email": "github@cloudcube.co.za"
   },
   "repository": {
     "type": "git",
-    "url": "https://github.com/korotovsky/n8n-nodes-datastore-pg.git"
+    "url": "https://github.com/biovolt/n8n-nodes-datastore-pg.git"
   },
   "engines": {
     "node": ">=20.15"
   },
-  "main": "index.js",
   "scripts": {
     "build": "npx rimraf dist && tsc && gulp build:icons",
     "dev": "tsc --watch",
@@ -35,7 +34,7 @@
   "n8n": {
     "n8nNodesApiVersion": 1,
     "nodes": [
-      "dist/nodes/Datastore/Datastore.node.js"
+      "dist/nodes/Datastore/DatastorePg.node.js"
     ]
   },
   "devDependencies": {
@@ -46,6 +45,7 @@
     "eslint-plugin-n8n-nodes-base": "^1.16.3",
     "gulp": "^5.0.0",
     "jest": "^29.7.0",
+    "n8n-workflow": "^1.82.0",
     "prettier": "^3.5.3",
     "ts-jest": "^29.2.5",
     "typescript": "^5.8.2"
