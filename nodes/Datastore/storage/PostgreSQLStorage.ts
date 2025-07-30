@@ -86,9 +86,8 @@ export class PostgreSQLStorage implements IDataStorage {
 				return undefined;
 			}
 			const value = result.rows[0].value;
-			// If value is already an object (JSONB returns objects), return as-is
-			// If it's a string, parse it
-			return typeof value === 'string' ? JSON.parse(value) : value;
+			// PostgreSQL JSONB automatically parses JSON, so we just return the value as-is
+			return value;
 		} finally {
 			client.release();
 		}

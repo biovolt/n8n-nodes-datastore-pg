@@ -24,23 +24,36 @@ export class DatastorePg implements INodeType {
 		},
 		inputs: [NodeConnectionType.Main],
 		outputs: [NodeConnectionType.Main],
+		credentials: [
+			{
+				// eslint-disable-next-line n8n-nodes-base/node-class-description-credentials-name-unsuffixed
+				name: 'postgres',
+				required: false,
+				displayOptions: {
+					show: {
+						storageBackend: ['postgresql'],
+					},
+				},
+			},
+		],
 		properties: [
 			...datastoreNodeFields,
 		],
 	};
 
-	private static getStorage(executeFunctions: IExecuteFunctions, itemIndex: number = 0): IDataStorage {
+	private static async getStorage(executeFunctions: IExecuteFunctions, itemIndex: number = 0): Promise<IDataStorage> {
 		const storageBackend = executeFunctions.getNodeParameter('storageBackend', itemIndex, 'memory') as StorageBackend;
 		
 		if (storageBackend === 'postgresql') {
+			const credentials = await executeFunctions.getCredentials('postgres', itemIndex);
 			const config: PostgreSQLConfig = {
-				host: executeFunctions.getNodeParameter('pgHost', itemIndex) as string,
-				port: executeFunctions.getNodeParameter('pgPort', itemIndex) as number,
-				database: executeFunctions.getNodeParameter('pgDatabase', itemIndex) as string,
-				user: executeFunctions.getNodeParameter('pgUser', itemIndex) as string,
-				password: executeFunctions.getNodeParameter('pgPassword', itemIndex) as string,
-				ssl: executeFunctions.getNodeParameter('pgSsl', itemIndex, false) as boolean,
-				maxConnections: executeFunctions.getNodeParameter('pgMaxConnections', itemIndex, 10) as number,
+				host: credentials.host as string,
+				port: credentials.port as number || 5432,
+				database: credentials.database as string,
+				user: credentials.user as string,
+				password: credentials.password as string,
+				ssl: !credentials.allowUnauthorizedCerts,
+				maxConnections: (credentials.max as number) || 10,
 			};
 			return StorageFactory.createStorage('postgresql', config);
 		}
@@ -53,7 +66,7 @@ export class DatastorePg implements INodeType {
 		const returnData: INodeExecutionData[] = [];
 		const operation = this.getNodeParameter('operation', 0) as string;
 		const outputForSetClear = this.getNodeParameter('outputForSetClear', 0, 'passThrough') as string;
-		const storage = DatastorePg.getStorage(this, 0);
+		const storage = await DatastorePg.getStorage(this, 0);
 
 		if (operation === 'clearAll') {
 			await storage.clear();
@@ -113,7 +126,7 @@ export class DatastorePg implements INodeType {
 
 		for (let i = 0; i < items.length; i++) {
 			const keyName = operation !== 'clearAll' ? (this.getNodeParameter('keyName', i, '') as string) : '';
-			const itemStorage = DatastorePg.getStorage(this, i);
+			const itemStorage = await DatastorePg.getStorage(this, i);
 
 			try {
 				if (operation === 'set') {

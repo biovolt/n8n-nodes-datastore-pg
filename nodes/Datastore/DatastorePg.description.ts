@@ -18,7 +18,7 @@ export const datastoreNodeFields: INodeProperties[] = [
 				description: 'Store data in PostgreSQL database (persistent)',
 			},
 		],
-		default: 'memory',
+		default: 'postgresql',
 		description: 'Choose where to store the data',
 	},
 	{
@@ -55,99 +55,6 @@ export const datastoreNodeFields: INodeProperties[] = [
 		default: 'set',
 	},
 
-	// PostgreSQL Configuration Fields
-	{
-		displayName: 'Host',
-		name: 'pgHost',
-		type: 'string',
-		default: 'localhost',
-		required: true,
-		description: 'PostgreSQL server host',
-		displayOptions: {
-			show: {
-				storageBackend: ['postgresql'],
-			},
-		},
-	},
-	{
-		displayName: 'Port',
-		name: 'pgPort',
-		type: 'number',
-		default: 5432,
-		required: true,
-		description: 'PostgreSQL server port',
-		displayOptions: {
-			show: {
-				storageBackend: ['postgresql'],
-			},
-		},
-	},
-	{
-		displayName: 'Database',
-		name: 'pgDatabase',
-		type: 'string',
-		default: '',
-		required: true,
-		description: 'PostgreSQL database name',
-		displayOptions: {
-			show: {
-				storageBackend: ['postgresql'],
-			},
-		},
-	},
-	{
-		displayName: 'Username',
-		name: 'pgUser',
-		type: 'string',
-		default: '',
-		required: true,
-		description: 'PostgreSQL username',
-		displayOptions: {
-			show: {
-				storageBackend: ['postgresql'],
-			},
-		},
-	},
-	{
-		displayName: 'Password',
-		name: 'pgPassword',
-		type: 'string',
-		typeOptions: {
-			password: true,
-		},
-		default: '',
-		required: true,
-		description: 'PostgreSQL password',
-		displayOptions: {
-			show: {
-				storageBackend: ['postgresql'],
-			},
-		},
-	},
-	{
-		displayName: 'SSL',
-		name: 'pgSsl',
-		type: 'boolean',
-		default: false,
-		description: 'Whether to use SSL connection to PostgreSQL',
-		displayOptions: {
-			show: {
-				storageBackend: ['postgresql'],
-			},
-		},
-	},
-	{
-		displayName: 'Max Connections',
-		name: 'pgMaxConnections',
-		type: 'number',
-		default: 10,
-		description: 'Maximum number of database connections in the pool',
-		displayOptions: {
-			show: {
-				storageBackend: ['postgresql'],
-			},
-		},
-	},
 
 	// Common field for Set, Get, Clear
 	{

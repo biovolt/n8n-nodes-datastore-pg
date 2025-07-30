@@ -5,7 +5,7 @@ import { IExecuteFunctions, INodeExecutionData } from 'n8n-workflow';
 jest.mock('../nodes/Datastore/storage/StorageFactory');
 
 describe('Datastore Node', () => {
-	let datastore: Datastore;
+	let datastore: DatastorePg;
 	let mockExecuteFunctions: Partial<IExecuteFunctions>;
 	let mockStorage: any;
 
@@ -23,6 +23,7 @@ describe('Datastore Node', () => {
 		mockExecuteFunctions = {
 			getInputData: jest.fn(),
 			getNodeParameter: jest.fn(),
+			getCredentials: jest.fn(),
 			getNode: jest.fn().mockReturnValue({ id: 'test-node', name: 'Test Node' }),
 			continueOnFail: jest.fn().mockReturnValue(false),
 		};
