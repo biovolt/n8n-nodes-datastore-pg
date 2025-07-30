@@ -1,6 +1,6 @@
 {
   "name": "n8n-nodes-datastore-pg",
-  "version": "0.1.33",
+  "version": "0.1.34",
   "description": "Datastore for n8n with PostgreSQL support - store data in memory or PostgreSQL database. This package is in testing and not for production use.",
   "keywords": [
     "n8n-community-node-package"

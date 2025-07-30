@@ -28,7 +28,7 @@ export class DatastorePg implements INodeType {
 			{
 				// eslint-disable-next-line n8n-nodes-base/node-class-description-credentials-name-unsuffixed
 				name: 'postgres',
-				required: false,
+				required: true,
 				displayOptions: {
 					show: {
 						storageBackend: ['postgresql'],
