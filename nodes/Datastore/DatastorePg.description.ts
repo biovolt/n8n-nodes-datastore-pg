@@ -2,6 +2,26 @@ import type { INodeProperties } from 'n8n-workflow';
 
 export const datastoreNodeFields: INodeProperties[] = [
 	{
+		displayName: 'Storage Backend',
+		name: 'storageBackend',
+		type: 'options',
+		noDataExpression: true,
+		options: [
+			{
+				name: 'In-Memory',
+				value: 'memory',
+				description: 'Store data in memory (lost on restart)',
+			},
+			{
+				name: 'PostgreSQL',
+				value: 'postgresql',
+				description: 'Store data in PostgreSQL database (persistent)',
+			},
+		],
+		default: 'postgresql',
+		description: 'Choose where to store the data',
+	},
+	{
 		displayName: 'Operation',
 		name: 'operation',
 		type: 'options',
@@ -34,6 +54,7 @@ export const datastoreNodeFields: INodeProperties[] = [
 		],
 		default: 'set',
 	},
+
 
 	// Common field for Set, Get, Clear
 	{

@@ -5,37 +5,71 @@ import type {
 	INodeTypeDescription,
 } from 'n8n-workflow';
 import { NodeConnectionType, NodeOperationError } from 'n8n-workflow';
-import { datastoreNodeFields } from "./Datastore.description";
+import { datastoreNodeFields } from "./DatastorePg.description";
+import { StorageFactory, StorageBackend } from './storage/StorageFactory';
+import { PostgreSQLConfig } from './storage/PostgreSQLStorage';
+import { IDataStorage } from './storage/IDataStorage';
 
-export class Datastore implements INodeType {
+export class DatastorePg implements INodeType {
 	description: INodeTypeDescription = {
-		displayName: 'Datastore',
-		name: 'datastore',
+		displayName: 'Datastore PG',
+		name: 'datastorePg',
 		icon: 'fa:database',
 		group: ['utility'],
 		version: 1,
-		subtitle: '={{$parameter["operation"]}}',
-		description: 'A simple in-memory key-value datastore for sharing data within the n8n instance.',
+		subtitle: '={{$parameter["operation"]}} ({{$parameter["storageBackend"]}})',
+		description: 'A configurable key-value datastore with support for in-memory and PostgreSQL storage.',
 		defaults: {
-			name: 'Datastore',
+			name: 'Datastore PG',
 		},
 		inputs: [NodeConnectionType.Main],
 		outputs: [NodeConnectionType.Main],
+		credentials: [
+			{
+				// eslint-disable-next-line n8n-nodes-base/node-class-description-credentials-name-unsuffixed
+				name: 'postgres',
+				required: true,
+				displayOptions: {
+					show: {
+						storageBackend: ['postgresql'],
+					},
+				},
+			},
+		],
 		properties: [
 			...datastoreNodeFields,
 		],
 	};
 
-	private static memoryStore: Map<string, any> = new Map();
+	private static async getStorage(executeFunctions: IExecuteFunctions, itemIndex: number = 0): Promise<IDataStorage> {
+		const storageBackend = executeFunctions.getNodeParameter('storageBackend', itemIndex, 'memory') as StorageBackend;
+		
+		if (storageBackend === 'postgresql') {
+			const credentials = await executeFunctions.getCredentials('postgres', itemIndex);
+			const config: PostgreSQLConfig = {
+				host: credentials.host as string,
+				port: credentials.port as number || 5432,
+				database: credentials.database as string,
+				user: credentials.user as string,
+				password: credentials.password as string,
+				ssl: !credentials.allowUnauthorizedCerts,
+				maxConnections: (credentials.max as number) || 10,
+			};
+			return StorageFactory.createStorage('postgresql', config);
+		}
+		
+		return StorageFactory.createStorage('memory');
+	}
 
 	async execute(this: IExecuteFunctions): Promise<INodeExecutionData[][]> {
 		const items = this.getInputData();
 		const returnData: INodeExecutionData[] = [];
 		const operation = this.getNodeParameter('operation', 0) as string;
 		const outputForSetClear = this.getNodeParameter('outputForSetClear', 0, 'passThrough') as string;
+		const storage = await DatastorePg.getStorage(this, 0);
 
 		if (operation === 'clearAll') {
-			Datastore.memoryStore.clear();
+			await storage.clear();
 			if (items.length === 0) {
 				if (outputForSetClear === 'status' || outputForSetClear === 'affectedValue' || outputForSetClear === 'affectedValueOnly') {
 					returnData.push({ json: { success: true, operation: 'clearAll' } });
@@ -75,7 +109,7 @@ export class Datastore implements INodeType {
 						);
 					}
 				}
-				Datastore.memoryStore.set(firstKeyName, inputArray);
+				await storage.set(firstKeyName, inputArray);
 
 				if (outputForSetClear === 'status') {
 					returnData.push({ json: { success: true, operation: 'set', key: firstKeyName, itemCount: items.length } });
@@ -92,6 +126,7 @@ export class Datastore implements INodeType {
 
 		for (let i = 0; i < items.length; i++) {
 			const keyName = operation !== 'clearAll' ? (this.getNodeParameter('keyName', i, '') as string) : '';
+			const itemStorage = await DatastorePg.getStorage(this, i);
 
 			try {
 				if (operation === 'set') {
@@ -120,7 +155,7 @@ export class Datastore implements INodeType {
 						});
 					}
 
-					Datastore.memoryStore.set(keyName, valueToStore);
+					await itemStorage.set(keyName, valueToStore);
 
 					if (outputForSetClear === 'status') {
 						returnData.push({ json: { success: true, operation: 'set', key: keyName }, pairedItem: { item: i } });
@@ -135,8 +170,8 @@ export class Datastore implements INodeType {
 					if (!keyName) {
 						throw new NodeOperationError(this.getNode(), 'Key Name is required for "Get" operation.', { itemIndex: i });
 					}
-					if (Datastore.memoryStore.has(keyName)) {
-						const retrievedValue = Datastore.memoryStore.get(keyName);
+					if (await itemStorage.has(keyName)) {
+						const retrievedValue = await itemStorage.get(keyName);
 						if (Array.isArray(retrievedValue)) {
 							retrievedValue.forEach(val => {
 								returnData.push({
@@ -162,12 +197,12 @@ export class Datastore implements INodeType {
 					}
 					let valueBeforeClear: any = null;
 					let keyExisted = false;
-					if (outputForSetClear === 'affectedValue' && Datastore.memoryStore.has(keyName)) {
-						valueBeforeClear = Datastore.memoryStore.get(keyName);
+					if (outputForSetClear === 'affectedValue' && await itemStorage.has(keyName)) {
+						valueBeforeClear = await itemStorage.get(keyName);
 						keyExisted = true;
 					}
 
-					const cleared = Datastore.memoryStore.delete(keyName);
+					const cleared = await itemStorage.delete(keyName);
 
 					if (outputForSetClear === 'status') {
 						returnData.push({ json: { success: true, operation: 'clear', key: keyName, cleared }, pairedItem: { item: i } });
