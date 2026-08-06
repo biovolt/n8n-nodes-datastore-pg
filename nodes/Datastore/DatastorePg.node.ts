@@ -46,13 +46,31 @@ export class DatastorePg implements INodeType {
 		
 		if (storageBackend === 'postgresql') {
 			const credentials = await executeFunctions.getCredentials('postgres', itemIndex);
+
+			// Mirror n8n's built-in Postgres SSL handling so the "SSL" and
+			// "Ignore SSL Issues" credential fields behave as documented:
+			//  - Ignore SSL Issues (allowUnauthorizedCerts) => SSL on, accept self-signed
+			//  - SSL 'disable' or unset                     => no SSL
+			//  - SSL 'allow'/'require'/'verify'/'verify-full' => SSL on, verify cert
+			// Previously the node forced SSL whenever "Ignore SSL Issues" was off,
+			// ignoring the SSL mode entirely (biovolt#1: fails on non-SSL servers).
+			const sslMode = credentials.ssl as string | undefined;
+			let ssl: boolean | { rejectUnauthorized: boolean };
+			if (credentials.allowUnauthorizedCerts === true) {
+				ssl = { rejectUnauthorized: false };
+			} else if (!sslMode || sslMode === 'disable') {
+				ssl = false;
+			} else {
+				ssl = { rejectUnauthorized: true };
+			}
+
 			const config: PostgreSQLConfig = {
 				host: credentials.host as string,
 				port: credentials.port as number || 5432,
 				database: credentials.database as string,
 				user: credentials.user as string,
 				password: credentials.password as string,
-				ssl: !credentials.allowUnauthorizedCerts,
+				ssl,
 				maxConnections: (credentials.max as number) || 10,
 			};
 			return StorageFactory.createStorage('postgresql', config);
