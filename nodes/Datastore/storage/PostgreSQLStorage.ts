@@ -7,7 +7,7 @@ export interface PostgreSQLConfig {
 	database: string;
 	user: string;
 	password: string;
-	ssl?: boolean;
+	ssl?: boolean | { rejectUnauthorized: boolean };
 	maxConnections?: number;
 }
 
@@ -22,7 +22,7 @@ export class PostgreSQLStorage implements IDataStorage {
 			database: config.database,
 			user: config.user,
 			password: config.password,
-			ssl: config.ssl ? { rejectUnauthorized: false } : false,
+			ssl: config.ssl ?? false,
 			max: config.maxConnections || 10,
 			idleTimeoutMillis: 30000,
 			connectionTimeoutMillis: 2000,
